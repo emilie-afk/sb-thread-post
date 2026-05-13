@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Succulents Box - Threads Post Generator</title>
+<style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #f7f9f5;
+  color: #1f2d1c;
+  margin: 0;
+  padding: 20px;
+  line-height: 1.5;
+}
+.container { max-width: 760px; margin: 0 auto; }
+h1 {
+  font-size: 24px;
+  margin: 0 0 6px 0;
+  color: #2d5a2d;
+}
+.subtitle {
+  color: #5a6b58;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+.card {
+  background: white;
+  border: 1px solid #e1e8de;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+label {
+  display: block;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 8px;
+  color: #2d5a2d;
+}
+input[type=text] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #c9d4c6;
+  border-radius: 8px;
+  font-size: 15px;
+  background: #fafcf8;
+  font-family: inherit;
+}
+input[type=text]:focus {
+  outline: none;
+  border-color: #4a8a4a;
+  background: white;
+}
+.types-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+.type-btn {
+  position: relative;
+  text-align: left;
+  background: #fafcf8;
+  border: 1px solid #d4ddd1;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  color: #2d3d2c;
+  transition: all 0.12s ease;
+}
+.type-btn:hover {
+  border-color: #4a8a4a;
+  background: #f0f6ee;
+}
+.type-btn.selected {
+  border-color: #2d5a2d;
+  background: #e8f0e5;
+  box-shadow: inset 0 0 0 1px #2d5a2d;
+}
+.type-btn .name { font-weight: 600; display: block; margin-bottom: 2px; }
+.type-btn .purpose { font-size: 11px; color: #6b7a68; }
+.pitch-badge {
+  display: inline-block;
+  font-size: 10px;
+  background: #f4a23a;
+  color: white;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+  font-weight: 600;
+}
+.generate-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.generate-btn {
+  background: #2d5a2d;
+  color: white;
+  border: none;
+  padding: 11px 22px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.generate-btn:hover:not(:disabled) { background: #3a7a3a; }
+.generate-btn:disabled { background: #a0b09e; cursor: not-allowed; }
+.count-select {
+  padding: 10px;
+  border: 1px solid #c9d4c6;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  background: white;
+}
+.status {
+  color: #6b7a68;
+  font-size: 13px;
+  font-style: italic;
+}
+.results { margin-top: 16px; }
+.idea {
+  background: white;
+  border: 1px solid #e1e8de;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  position: relative;
+  white-space: pre-wrap;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.idea-num {
+  display: inline-block;
+  background: #2d5a2d;
+  color: white;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 22px;
+  margin-right: 8px;
+}
+.copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: 1px solid #d4ddd1;
+  color: #5a6b58;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.copy-btn:hover { background: #f0f6ee; }
+.copy-btn.copied { background: #2d5a2d; color: white; border-color: #2d5a2d; }
+.empty-state {
+  text-align: center;
+  color: #8a978a;
+  padding: 30px 20px;
+  font-size: 14px;
+}
+.error {
+  background: #fce8e8;
+  border: 1px solid #e8c0c0;
+  color: #a04040;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Succulents Box Threads post generator</h1>
+  <div class="subtitle">Pick a post type, type a plant, get a few ready-to-tweak post ideas.</div>
+
+  <div class="card">
+    <label for="plant">Plant or product</label>
+    <input id="plant" type="text" placeholder="e.g. Echeveria Lola, String of Pearls, our Beginner Sampler...">
+  </div>
+
+  <div class="card">
+    <label>Post type</label>
+    <div class="types-grid" id="types"></div>
+  </div>
+
+  <div class="card">
+    <div class="generate-row">
+      <label style="margin: 0;">How many ideas?</label>
+      <select id="count" class="count-select">
+        <option value="3">3</option>
+        <option value="5" selected>5</option>
+        <option value="8">8</option>
+      </select>
+      <button id="generate" class="generate-btn">Generate ideas</button>
+      <span class="status" id="status"></span>
+    </div>
+  </div>
+
+  <div class="results" id="results">
+    <div class="empty-state">Pick a post type and a plant above, then hit Generate.</div>
+  </div>
+</div>
+
+<script>
+const POST_TYPES = [
+  {
+    id: 'carousel',
+    name: 'Inspiration photo carousel',
+    purpose: 'Highest likes ceiling. Visual, almost no text.',
+    softPitch: false,
+    instructions: 'A very short caption (under 15 words) that introduces a photo carousel showcasing the plant. Tease beauty, color, or vibe. End with a simple swipe cue like "swipe to see them all" or similar. Skip hashtag-only captions.'
+  },
+  {
+    id: 'howto',
+    name: 'Quick how-to tutorial',
+    purpose: 'Drives saves and follows. Numbered steps.',
+    softPitch: 'sometimes',
+    instructions: 'A short, scannable mini-tutorial in 3 to 5 numbered steps, focused on caring for, propagating, repotting, or styling the named plant. Keep each step under 12 words. End with a simple sign-off, NOT a sales pitch unless the soft pitch flag is on.'
+  },
+  {
+    id: 'question',
+    name: 'Open-ended community question',
+    purpose: 'Comment magnet. Drives algorithm reach.',
+    softPitch: false,
+    instructions: 'A single conversational question that invites people to share photos, favorites, or opinions about the plant. Sound like a real plant lover asking, not a brand. Keep under 25 words. No CTA or product mention.'
+  },
+  {
+    id: 'humor',
+    name: 'Relatable identity humor',
+    purpose: 'High repost potential. One-liner jokes.',
+    softPitch: false,
+    instructions: 'A funny, relatable one-line post in the voice of someone who is obsessed with plants. Self-deprecating, plant-mom-coded, or dryly absurd. Reference the named plant naturally if it fits, but never force it. Keep under 20 words.'
+  },
+  {
+    id: 'wellness',
+    name: 'Wellness / mood framing',
+    purpose: 'Emotional resonance. Broad reach beyond plant fans.',
+    softPitch: false,
+    instructions: 'A short, calming post that frames caring for the named plant (or plants generally) as a small mental health ritual, grounding moment, or nervous-system reset. Genuine and warm tone, not corporate-wellness. Under 30 words.'
+  },
+  {
+    id: 'beforeafter',
+    name: 'Before-and-after / growth update',
+    purpose: 'Soft pitch through real growth visuals.',
+    softPitch: true,
+    instructions: 'A caption for a before-and-after photo of the named plant, framed as a Succulents Box customer or shop journey. Casually mention "from our shop" or "ordered from Succulents Box" in a natural way. Under 25 words. Warm, proud tone.'
+  },
+  {
+    id: 'ugc',
+    name: 'Customer photo / UGC repost',
+    purpose: 'Soft pitch. Builds community.',
+    softPitch: true,
+    instructions: 'A caption resharing a customer photo of the named plant. Compliment their setup, give them credit (use a placeholder @customer), and very lightly mention that the plant came from us. Avoid sounding salesy. Under 30 words.'
+  },
+  {
+    id: 'curated',
+    name: 'Curated pick recommendation',
+    purpose: 'Most direct soft pitch. Helpful, not pushy.',
+    softPitch: true,
+    instructions: 'A short post that recommends the named plant (or a small bundle including it) to a specific audience (e.g. beginners, low-light apartments, people who travel). Frame it as friendly advice. End with a soft cue like "link in bio if you want one". Under 35 words.'
+  },
+  {
+    id: 'findpeople',
+    name: '"Find my people" algorithm groom',
+    purpose: 'Follower growth. Connect with similar accounts.',
+    softPitch: false,
+    instructions: 'A short rallying post asking other plant people to engage (drop an emoji, comment a plant, follow back, etc.). Reference the named plant as the speaker\'s love or obsession. Friendly, casual, community-building. Under 25 words.'
+  }
+];
+
+let selectedType = null;
+
+const typesEl = document.getElementById('types');
+POST_TYPES.forEach((t, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'type-btn';
+  btn.dataset.id = t.id;
+  btn.innerHTML = `<span class="name">${t.name}${t.softPitch ? '<span class="pitch-badge">SOFT PITCH</span>' : ''}</span><span class="purpose">${t.purpose}</span>`;
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedType = t;
+  });
+  typesEl.appendChild(btn);
+  if (i === 0) { btn.classList.add('selected'); selectedType = t; }
+});
+
+const statusEl = document.getElementById('status');
+const resultsEl = document.getElementById('results');
+const genBtn = document.getElementById('generate');
+const plantEl = document.getElementById('plant');
+const countEl = document.getElementById('count');
+
+genBtn.addEventListener('click', async () => {
+  const plant = plantEl.value.trim();
+  if (!plant) { statusEl.textContent = 'Type a plant name first.'; return; }
+  if (!selectedType) { statusEl.textContent = 'Pick a post type.'; return; }
+  const n = parseInt(countEl.value, 10);
+
+  genBtn.disabled = true;
+  statusEl.textContent = 'Generating...';
+  resultsEl.innerHTML = '<div class="empty-state">Cooking up ideas...</div>';
+
+  const prompt = `You write social media posts for Succulents Box, a plant shop. Generate ${n} distinct, high-quality Threads post ideas in the following style.
+
+POST TYPE: ${selectedType.name}
+PURPOSE: ${selectedType.purpose}
+STYLE GUIDE: ${selectedType.instructions}
+
+PLANT / PRODUCT: ${plant}
+
+RULES:
+- Each idea should be ONE post, ready to copy and paste.
+- Match the Threads platform: casual, conversational, short.
+- Vary the angle, hook, and emoji use across the ${n} ideas. Don't repeat openers.
+- Use NO em dashes or en dashes anywhere. Use commas, periods, or "to" instead.
+- Use emojis sparingly and only where they feel natural (max 2 per post).
+- ${selectedType.softPitch === true ? 'This IS a soft pitch type, so naturally mention Succulents Box or "our shop" in each post, but keep it warm and human.' : selectedType.softPitch === 'sometimes' ? 'About 1 in 3 of these should subtly mention Succulents Box; the rest should be pure value.' : 'This is NOT a soft pitch. Do NOT mention Succulents Box, our shop, or any sale/link.'}
+
+Return ONLY the post ideas, numbered 1 through ${n}, with each post on its own line(s). Don't add headings, commentary, or quotation marks.`;
+
+  try {
+    const response = await fetch('/.netlify/functions/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    });
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Server error (${response.status}): ${errText}`);
+    }
+    const result = await response.json();
+    const text = (result.text || '').trim();
+    const ideas = parseIdeas(text);
+    renderIdeas(ideas, plant, selectedType);
+    statusEl.textContent = '';
+  } catch (e) {
+    resultsEl.innerHTML = `<div class="error">Couldn't generate ideas: ${escapeHtml(e.message || String(e))}</div>`;
+    statusEl.textContent = '';
+  } finally {
+    genBtn.disabled = false;
+  }
+});
+
+function parseIdeas(text) {
+  const parts = text.split(/\n(?=\s*\d+[\.\)]\s)/);
+  return parts.map(p => p.replace(/^\s*\d+[\.\)]\s*/, '').trim()).filter(Boolean);
+}
+
+function renderIdeas(ideas, plant, type) {
+  if (!ideas.length) {
+    resultsEl.innerHTML = '<div class="empty-state">No ideas came back. Try again.</div>';
+    return;
+  }
+  resultsEl.innerHTML = '';
+  ideas.forEach((idea, i) => {
+    const div = document.createElement('div');
+    div.className = 'idea';
+    div.innerHTML = `<span class="idea-num">${i+1}</span><span class="idea-text">${escapeHtml(idea)}</span><button class="copy-btn">Copy</button>`;
+    const btn = div.querySelector('.copy-btn');
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(idea).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1400);
+      });
+    });
+    resultsEl.appendChild(div);
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+plantEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') genBtn.click();
+});
+</script>
+</body>
+</html>
