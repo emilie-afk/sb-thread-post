@@ -183,10 +183,100 @@ input[type=text]:focus {
   border-radius: 8px;
   font-size: 13px;
 }
+.password-gate {
+  position: fixed;
+  inset: 0;
+  background: #f7f9f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+.password-box {
+  background: white;
+  border: 1px solid #e1e8de;
+  border-radius: 12px;
+  padding: 28px 26px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+  max-width: 380px;
+  width: 100%;
+}
+.password-box h2 {
+  margin: 0 0 6px 0;
+  color: #2d5a2d;
+  font-size: 20px;
+}
+.password-box .hint {
+  color: #6b7a68;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.password-input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #c9d4c6;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  margin-bottom: 10px;
+}
+.password-input:focus {
+  outline: none;
+  border-color: #4a8a4a;
+}
+.password-submit {
+  width: 100%;
+  background: #2d5a2d;
+  color: white;
+  border: none;
+  padding: 11px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.password-submit:hover { background: #3a7a3a; }
+.password-error {
+  color: #a04040;
+  font-size: 13px;
+  margin-top: 10px;
+  min-height: 18px;
+}
+.logout-link {
+  position: fixed;
+  top: 14px;
+  right: 16px;
+  color: #6b7a68;
+  font-size: 12px;
+  text-decoration: none;
+  background: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #d4ddd1;
+  cursor: pointer;
+  font-family: inherit;
+}
+.logout-link:hover { background: #f0f6ee; color: #2d5a2d; }
+.app-hidden { display: none; }
 </style>
 </head>
 <body>
-<div class="container">
+
+<div class="password-gate" id="passwordGate">
+  <div class="password-box">
+    <h2>Succulents Box tools</h2>
+    <div class="hint">Enter the password to use the generator.</div>
+    <input type="password" class="password-input" id="passwordInput" placeholder="Password" autofocus>
+    <button class="password-submit" id="passwordSubmit">Unlock</button>
+    <div class="password-error" id="passwordError"></div>
+  </div>
+</div>
+
+<a class="logout-link app-hidden" id="logoutLink">Lock</a>
+
+<div class="container app-hidden" id="appContainer">
   <h1>Succulents Box Threads post generator</h1>
   <div class="subtitle">Pick a post type, type a plant, get a few ready-to-tweak post ideas.</div>
 
@@ -219,6 +309,53 @@ input[type=text]:focus {
 </div>
 
 <script>
+// ----- Password gate -----
+const passwordGate = document.getElementById('passwordGate');
+const passwordInput = document.getElementById('passwordInput');
+const passwordSubmit = document.getElementById('passwordSubmit');
+const passwordError = document.getElementById('passwordError');
+const appContainer = document.getElementById('appContainer');
+const logoutLink = document.getElementById('logoutLink');
+
+function getStoredPassword() {
+  try { return sessionStorage.getItem('sbpw') || ''; } catch (e) { return ''; }
+}
+function setStoredPassword(p) {
+  try { sessionStorage.setItem('sbpw', p); } catch (e) {}
+}
+function clearStoredPassword() {
+  try { sessionStorage.removeItem('sbpw'); } catch (e) {}
+}
+function showApp() {
+  passwordGate.style.display = 'none';
+  appContainer.classList.remove('app-hidden');
+  logoutLink.classList.remove('app-hidden');
+}
+function showGate(errMsg) {
+  passwordGate.style.display = 'flex';
+  appContainer.classList.add('app-hidden');
+  logoutLink.classList.add('app-hidden');
+  passwordError.textContent = errMsg || '';
+  passwordInput.value = '';
+  setTimeout(() => passwordInput.focus(), 50);
+}
+passwordSubmit.addEventListener('click', () => {
+  const v = passwordInput.value;
+  if (!v) { passwordError.textContent = 'Type a password.'; return; }
+  setStoredPassword(v);
+  passwordError.textContent = '';
+  showApp();
+});
+passwordInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') passwordSubmit.click();
+});
+logoutLink.addEventListener('click', () => {
+  clearStoredPassword();
+  showGate();
+});
+if (getStoredPassword()) showApp();
+
+// ----- App -----
 const POST_TYPES = [
   {
     id: 'carousel',
@@ -340,8 +477,13 @@ Return ONLY the post ideas, numbered 1 through ${n}, with each post on its own l
     const response = await fetch('/.netlify/functions/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
+      body: JSON.stringify({ prompt, password: getStoredPassword() })
     });
+    if (response.status === 401) {
+      clearStoredPassword();
+      showGate('Wrong password. Try again.');
+      return;
+    }
     if (!response.ok) {
       const errText = await response.text();
       throw new Error(`Server error (${response.status}): ${errText}`);

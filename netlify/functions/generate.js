@@ -1,7 +1,7 @@
 // Netlify Function that proxies requests to the Anthropic Claude API.
-// The API key is read from the ANTHROPIC_API_KEY environment variable,
-// which you set in Netlify (Site settings -> Environment variables).
-// Never commit the actual API key to the repo.
+// Requires two environment variables (set in Netlify -> Site settings -> Environment variables):
+//   ANTHROPIC_API_KEY = your Anthropic API key (from console.anthropic.com)
+//   APP_PASSWORD      = the password users must enter to use the generator
 
 exports.handler = async (event) => {
   // Only allow POST
@@ -21,12 +21,30 @@ exports.handler = async (event) => {
     };
   }
 
-  let prompt;
+  if (!process.env.APP_PASSWORD) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        error: 'Server is missing APP_PASSWORD. Set it in Netlify environment variables.'
+      })
+    };
+  }
+
+  let prompt, password;
   try {
     const body = JSON.parse(event.body || '{}');
     prompt = body.prompt;
+    password = body.password;
   } catch (e) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON body' }) };
+  }
+
+  // Check password BEFORE doing anything else so we don't burn API tokens on bad auth
+  if (!password || password !== process.env.APP_PASSWORD) {
+    return {
+      statusCode: 401,
+      body: JSON.stringify({ error: 'Wrong password' })
+    };
   }
 
   if (!prompt || typeof prompt !== 'string') {
