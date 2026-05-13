@@ -1,0 +1,9 @@
+{
+  "name": "succulents-box-threads-generator",
+  "version": "1.0.0",
+  "description": "Threads post idea generator for Succulents Box. Static HTML + one Netlify Function that proxies to Anthropic Claude.",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  }
+}
