@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "template": "FICTIONAL TEMPLATE. Write {{count}} ideas.\nTYPE: {{typeName}}\nPURPOSE: {{typePurpose}}\nGUIDE: {{typeInstructions}}\nPLANT: {{plant}}\n- {{pitchRule}}\nReturn numbered ideas 1 through {{count}}.",
+  "pitchRules": {
+    "yes": "Fictional rule: mention the shop.",
+    "sometimes": "Fictional rule: mention the shop sometimes.",
+    "no": "Fictional rule: do not mention the shop."
+  },
+  "types": [
+    { "id": "tip", "name": "Example tip", "purpose": "Fictional purpose.", "softPitch": "no", "instructions": "Fictional instructions for a tip." },
+    { "id": "pick", "name": "Example pick", "purpose": "Fictional purpose two.", "softPitch": "yes", "instructions": "Fictional instructions for a pick." }
+  ]
+}
